@@ -488,7 +488,18 @@ namespace
 		j = nlohmann::json::array();
 		for (const auto& [y, invoke] : byPulse)
 		{
-			j.push_back(nlohmann::json::array({ y, invoke.d, invoke.length }));
+			nlohmann::json vJSON = nlohmann::json::object();
+			{
+				Write(vJSON, "count", invoke.v.count, 1);
+			}
+			if (vJSON.empty())
+			{
+				j.push_back(nlohmann::json::array({ y, invoke.d, invoke.length }));
+			}
+			else
+			{
+				j.push_back(nlohmann::json::array({ y, invoke.d, invoke.length, std::move(vJSON) }));
+			}
 		}
 	}
 
@@ -1896,11 +1907,17 @@ namespace
 								if (item.is_array() && item.size() >= 3)
 								{
 									Pulse y = item[0].get<Pulse>();
-									camera.cam.pattern.laser.slamEvent.spin[y] = CamPatternInvokeSpin
+									CamPatternInvokeSpin spin;
+									spin.d = item[1].get<std::int32_t>();
+									spin.length = item[2].get<RelPulse>();
+									if (item.size() >= 4 && item[3].is_object())
 									{
-										.d = item[1].get<std::int32_t>(),
-										.length = item[2].get<RelPulse>(),
-									};
+										if (item[3].contains("count"))
+										{
+											spin.v.count = item[3]["count"].get<std::int32_t>();
+										}
+									}
+									camera.cam.pattern.laser.slamEvent.spin[y] = std::move(spin);
 								}
 							}
 						}
