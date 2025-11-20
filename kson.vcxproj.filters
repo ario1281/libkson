@@ -176,7 +176,7 @@
     <ClCompile Include="src\IO\KshIOOut.cpp">
       <Filter>Source Files\io</Filter>
     </ClCompile>
-    <ClCompile Include="src\IO\KsonIO.cpp">
+    <ClCompile Include="src\IO\KsonIOIn.cpp">
       <Filter>Source Files\io</Filter>
     </ClCompile>
     <ClCompile Include="src\Audio\AudioEffect.cpp">
@@ -190,6 +190,9 @@
     </ClCompile>
     <ClCompile Include="src\Compat\CompatInfo.cpp">
       <Filter>Source Files\compat</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IO\KsonIOOut.cpp">
+      <Filter>Source Files\io</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
