@@ -13,6 +13,11 @@ namespace kson
 		Graph centerSplit; // "center_split"
 	};
 
+	struct CamPatternInvokeSpinValue
+	{
+		std::int32_t count = 1;
+	};
+
 	struct CamPatternInvokeSwingValue
 	{
 		double scale = 250.0;
@@ -31,7 +36,7 @@ namespace kson
 		};
 	}
 
-	using CamPatternInvokeSpin = detail::BasicCamPatternInvoke<std::tuple<>>; // Note: std::tuple<> is empty
+	using CamPatternInvokeSpin = detail::BasicCamPatternInvoke<CamPatternInvokeSpinValue>;
 	using CamPatternInvokeSwing = detail::BasicCamPatternInvoke<CamPatternInvokeSwingValue>;
 
 	struct CamPatternLaserInvokeList
