@@ -55,7 +55,8 @@
     <ClCompile Include="src\Error.cpp" />
     <ClCompile Include="src\IO\KshIOIn.cpp" />
     <ClCompile Include="src\IO\KshIOOut.cpp" />
-    <ClCompile Include="src\IO\KsonIO.cpp" />
+    <ClCompile Include="src\IO\KsonIOIn.cpp" />
+    <ClCompile Include="src\IO\KsonIOOut.cpp" />
     <ClCompile Include="src\Util\GraphCurve.cpp" />
     <ClCompile Include="src\Util\GraphUtils.cpp" />
     <ClCompile Include="src\Util\TiltUtils.cpp" />
