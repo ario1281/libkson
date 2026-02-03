@@ -961,7 +961,6 @@ namespace
 		return j;
 	}
 
->>>>>>> upstream/master:src/IO/KsonIO.cpp
 	// ==================== Reading/Loading Implementation ====================
 
 	template<typename T>
