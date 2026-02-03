@@ -9,8 +9,6 @@ namespace
 {
 	using namespace kson;
 
-<<<<<<< HEAD:src/IO/KsonIOIn.cpp
-=======
 	// Note: Since to_json() overload makes it difficult to find minor bugs
 	//       (e.g., ByPulse<T> shouldn't be converted as std::map, Pulse and RelPulse shouldn't be the same),
 	//       we write our own conversion functions here.
