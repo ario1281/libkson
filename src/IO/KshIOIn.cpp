@@ -2477,9 +2477,6 @@ namespace
 	}
 }
 
-<<<<<<< HEAD
-kson::MetaChartData kson::LoadKSHMetaChartData(std::istream& stream)
-=======
 std::vector<std::string> kson::KshLoadingDiag::playerWarnings() const
 {
 	std::vector<std::string> result;
@@ -2505,16 +2502,12 @@ std::vector<std::string> kson::KshLoadingDiag::editorWarnings() const
 }
 
 MetaChartData kson::LoadKshMetaChartData(std::istream& stream)
->>>>>>> upstream/develop
 {
 	return CreateChartDataFromMetaDataStream<MetaChartData>(stream, nullptr);
 }
 
-<<<<<<< HEAD
-kson::MetaChartData kson::LoadKSHMetaChartData(const std::string& filePath)
-=======
+
 MetaChartData kson::LoadKshMetaChartData(const std::string& filePath)
->>>>>>> upstream/develop
 {
 	if (!std::filesystem::exists(filePath))
 	{
@@ -2571,11 +2564,7 @@ kson::ChartData kson::LoadKshChartData(std::istream& stream, KshLoadingDiag* pKs
 	return chartData;
 }
 
-<<<<<<< HEAD
-kson::ChartData kson::LoadKSHChartData(const std::string& filePath)
-=======
 ChartData kson::LoadKshChartData(const std::string& filePath, KshLoadingDiag* pKshDiag)
->>>>>>> upstream/develop
 {
 	if (!std::filesystem::exists(filePath))
 	{

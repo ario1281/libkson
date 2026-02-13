@@ -1458,6 +1458,20 @@ namespace
 		return bgm;
 	}
 
+	MetaBGMInfo ParseMetaBGMInfo(const nlohmann::json& j, KsonLoadingDiag* pDiag)
+	{
+		MetaBGMInfo bgm;
+		bgm.filename = GetWithDefault<std::string>(j, "filename", "");
+		bgm.vol = GetWithDefault<double>(j, "vol", 1.0);
+
+		if (j.contains("preview"))
+		{
+			bgm.preview = ParseBGMPreviewInfo(j["preview"], pDiag);
+		}
+
+		return bgm;
+	}
+
 	AudioEffectType ParseAudioEffectType(const std::string& typeStr)
 	{
 		static const std::unordered_map<std::string, AudioEffectType> typeMap = {
@@ -1796,6 +1810,18 @@ namespace
 		if (j.contains("audio_effect"))
 		{
 			audio.audioEffect = ParseAudioEffectInfo(j["audio_effect"], pDiag);
+		}
+
+		return audio;
+	}
+
+	MetaAudioInfo ParseMetaAudioInfo(const nlohmann::json& j, KsonLoadingDiag* pDiag)
+	{
+		MetaAudioInfo audio;
+
+		if (j.contains("bgm"))
+		{
+			audio.bgm = ParseMetaBGMInfo(j["bgm"], pDiag);
 		}
 
 		return audio;
@@ -2392,4 +2418,109 @@ kson::ChartData kson::LoadKsonChartData(const std::string& filePath, KsonLoading
 	}
 	return kson::LoadKsonChartData(ifs, pKsonDiag);
 }
+
+kson::MetaChartData kson::LoadKsonMetaChartData(std::istream& stream, KsonLoadingDiag* pKsonDiag)
+{
+	KsonLoadingDiag localDiag;
+	if (!pKsonDiag)
+	{
+		pKsonDiag = &localDiag;
+	}
+
+	MetaChartData chartData;
+
+	if (!stream.good())
+	{
+		chartData.error = ErrorType::GeneralIOError;
+		return chartData;
+	}
+
+	try
+	{
+		nlohmann::json j;
+		stream >> j;
+
+		// format_versionフィールドの必須チェック
+		if (!j.contains("format_version"))
+		{
+			chartData.error = ErrorType::KsonParseError;
+			pKsonDiag->warnings.push_back({
+				.type = KsonLoadingWarningType::MissingFormatVersion,
+				.scope = WarningScope::PlayerAndEditor,
+				.message = "Missing required field: format_version",
+				});
+			return chartData;
+		}
+
+		if (!j["format_version"].is_number_integer())
+		{
+			chartData.error = ErrorType::KsonParseError;
+			pKsonDiag->warnings.push_back({
+				.type = KsonLoadingWarningType::InvalidFormatVersion,
+				.scope = WarningScope::PlayerAndEditor,
+				.message = "Invalid format_version: must be an integer",
+				});
+			return chartData;
+		}
+
+		const std::int32_t formatVersion = j["format_version"].get<std::int32_t>();
+		if (formatVersion > kKsonFormatVersion)
+		{
+		}
+		// Parse each component
+		if (j.contains("meta"))
+		{
+			chartData.meta = ParseMetaInfo(j["meta"], pKsonDiag);
+		}
+
+		if (j.contains("audio"))
+		{
+			chartData.audio = ParseMetaAudioInfo(j["audio"], pKsonDiag);
+		}
+
+		chartData.error = ErrorType::None;
+	}
+	catch (const nlohmann::json::parse_error& e)
+	{
+		chartData.error = ErrorType::KsonParseError;
+		pKsonDiag->warnings.push_back({
+			.type = KsonLoadingWarningType::JsonParseError,
+			.scope = WarningScope::PlayerAndEditor,
+			.message = "JSON parse error: " + std::string(e.what()),
+			});
+	}
+	catch (const nlohmann::json::type_error& e)
+	{
+		chartData.error = ErrorType::KsonParseError;
+		pKsonDiag->warnings.push_back({
+			.type = KsonLoadingWarningType::JsonTypeError,
+			.scope = WarningScope::PlayerAndEditor,
+			.message = "JSON type error: " + std::string(e.what()),
+			});
+	}
+	catch (const std::exception& e)
+	{
+		chartData.error = ErrorType::UnknownError;
+		pKsonDiag->warnings.push_back({
+			.type = KsonLoadingWarningType::UnexpectedError,
+			.scope = WarningScope::PlayerAndEditor,
+			.message = "Unexpected error: " + std::string(e.what()),
+			});
+	}
+
+	return chartData;
+}
+
+kson::MetaChartData kson::LoadKsonMetaChartData(const std::string& filePath, KsonLoadingDiag* pDiag)
+{
+	std::ifstream ifs(filePath);
+	if (!ifs.good())
+	{
+		MetaChartData chartData;
+		chartData.error = ErrorType::CouldNotOpenInputFileStream;
+		return chartData;
+	}
+	return kson::LoadKsonMetaChartData(ifs);
+}
+
 #endif
