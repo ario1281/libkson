@@ -1,8 +1,12 @@
-﻿#pragma once
+#pragma once
 #include "Error.hpp"
 #include "ChartData.hpp"
+#include "IO/IDiag.hpp"
 #include "IO/KshIO.hpp"
+#include "IO/KshLoadingDiag.hpp"
+#include "IO/KshSavingDiag.hpp"
 #include "IO/KsonIO.hpp"
+#include "IO/KsonLoadingDiag.hpp"
 #include "Util/TimingUtils.hpp"
 #include "Util/GraphUtils.hpp"
 #include "Util/GraphCurve.hpp"

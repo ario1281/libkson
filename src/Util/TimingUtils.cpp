@@ -1,9 +1,13 @@
-﻿#include "kson/Util/TimingUtils.hpp"
+#include "kson/Util/TimingUtils.hpp"
 #include <optional>
 #include <iostream>
 
 kson::Pulse kson::TimeSigOneMeasurePulse(const TimeSig& timeSig)
 {
+	if (timeSig.d == 0)
+	{
+		return 0;
+	}
 	return kResolution4 * static_cast<Pulse>(timeSig.n) / static_cast<Pulse>(timeSig.d);
 }
 

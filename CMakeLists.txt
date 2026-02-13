@@ -9,6 +9,8 @@ option(KSON_BUILD_TESTS "Build tests" ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+
 # Get git commit hash
 find_package(Git QUIET)
 if(GIT_FOUND)
@@ -22,6 +24,8 @@ if(GIT_FOUND)
 else()
 	set(KSON_GIT_HASH "unknown")
 endif()
+
+set(KSON_GIT_HASH "${KSON_GIT_HASH}" PARENT_SCOPE)
 
 set(KSON_VERSION "0.1.0")
 if(NOT KSON_GIT_HASH STREQUAL "unknown")

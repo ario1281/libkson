@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "kson/Common/Common.hpp"
 #include "kson/Meta/MetaInfo.hpp"
 #include "kson/Beat/BeatInfo.hpp"
@@ -23,8 +23,6 @@ namespace kson
 		MetaAudioInfo audio;
 
 		ErrorType error = ErrorType::None;
-
-		std::vector<std::string> warnings;
 	};
 
 	struct ChartData
@@ -44,8 +42,6 @@ namespace kson
 #endif
 
 		ErrorType error = ErrorType::None;
-
-		std::vector<std::string> warnings;
 	};
 
 	[[nodiscard]]
