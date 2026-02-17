@@ -180,7 +180,7 @@ TEST_CASE("KSON Loading", "[kson_io]") {
     
     SECTION("Non-existent file") {
         auto chart = kson::LoadKsonChartData("non_existent_file.kson");
-        REQUIRE(chart.error == kson::ErrorType::CouldNotOpenInputFileStream);
+        REQUIRE(chart.error == kson::ErrorType::FileNotFound);
     }
 }
 
@@ -643,7 +643,11 @@ TEST_CASE("KSON BeatInfo scroll_speed", "[kson_io][beat]") {
         kson::ChartData chart = kson::LoadKsonChartData(stream);
         
         REQUIRE(chart.error == kson::ErrorType::None);
-        REQUIRE(chart.beat.scrollSpeed.empty());
+        // Default scroll_speed=1.0 is added at pulse 0
+        REQUIRE(chart.beat.scrollSpeed.size() == 1);
+        REQUIRE(chart.beat.scrollSpeed.contains(0));
+        REQUIRE(chart.beat.scrollSpeed.at(0).v.v == Approx(1.0));
+        REQUIRE(chart.beat.scrollSpeed.at(0).v.vf == Approx(1.0));
     }
     
     SECTION("scroll_speed with gaps (sparse points)") {

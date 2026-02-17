@@ -13,6 +13,12 @@ namespace
 {
 	using namespace kson;
 
+	std::filesystem::path U8Path(const std::string& utf8Str)
+	{
+		return std::filesystem::path(
+			std::u8string_view(reinterpret_cast<const char8_t*>(utf8Str.data()), utf8Str.size()));
+	}
+
 	// KSH resolution (192 pulses per 4/4 measure)
 	constexpr Pulse kKshResolution4 = 192;
 	static_assert(kResolution4 % kKshResolution4 == 0, "kResolution4 must be divisible by kKshResolution4");
@@ -23,10 +29,8 @@ namespace
 		return static_cast<std::int32_t>(pulse * kKshResolution4 / kResolution4);
 	}
 
-	constexpr char kOptionSeparator = '=';
 	constexpr char kBlockSeparator = '|';
 	constexpr std::string_view kMeasureSeparator = "--";
-	constexpr char kAudioEffectStrSeparator = ';';
 
 	constexpr std::int32_t kLaserXMax = 50;
 
@@ -37,8 +41,7 @@ namespace
 	constexpr double kWideLaserRightZeroValue = 0.75;
 
 	constexpr double kManualTiltAbsMax = 1000.0;
-	constexpr double kZoomAbsMaxLegacy = 300.0; // ver < 1.67
-	constexpr double kZoomAbsMax = 65535.0; // ver >= 1.67
+	constexpr double kZoomAbsMax = 65535.0;
 	constexpr double kCenterSplitAbsMax = 65535.0;
 	constexpr double kRotationDegAbsMax = 65535.0;
 
@@ -1074,7 +1077,7 @@ namespace
 	}
 
 	// Get BT char at pulse
-	char GetBTCharAt(const ByPulse<Interval>& lane, Pulse pulse, Pulse oneLinePulse)
+	char GetBTCharAt(const ByPulse<Interval>& lane, Pulse pulse, Pulse)
 	{
 		// Check if note starts at this pulse
 		if (lane.contains(pulse))
@@ -1106,7 +1109,7 @@ namespace
 	}
 
 	// Get FX char at pulse
-	char GetFXCharAt(const ByPulse<Interval>& lane, Pulse pulse, Pulse oneLinePulse)
+	char GetFXCharAt(const ByPulse<Interval>& lane, Pulse pulse, Pulse)
 	{
 		// Check if note starts at this pulse
 		if (lane.contains(pulse))
@@ -1947,8 +1950,7 @@ namespace
 			{
 				if (seg.startPulse == pulse && seg.isSectionStart)
 				{
-					auto& laserState = state.laserStates[i];
-					// Output wide annotation if changed
+					// Output wide annotation
 					if (seg.wide)
 					{
 						stream << "laserrange_" << (i == 0 ? 'l' : 'r') << "=2x\r\n";
@@ -2068,10 +2070,6 @@ namespace
 					const auto& params = laneEvents[laneIdx].at(pulse);
 					const std::string audioEffectStr = GenerateKshAudioEffectString(chartData, effectName, params, true);
 
-					// Check if this pulse is the start of an FX long note
-					const bool isNoteStart = chartData.note.fx[laneIdx].contains(pulse) &&
-						chartData.note.fx[laneIdx].at(pulse).length > 0;
-
 					// Output fx-l/fx-r
 					stream << "fx-" << (laneIdx == 0 ? 'l' : 'r') << "=" << audioEffectStr << "\r\n";
 					state.currentFXAudioEffects[laneIdx] = audioEffectStr;
@@ -2149,9 +2147,6 @@ namespace
 		const Pulse measureEnd = measureStart + measureLength;
 		Pulse gcd = measureLength;
 		bool shouldDoubleResolution = false;
-
-		// 1/32 measure length for slam representation (30 pulses at kResolution=240)
-		constexpr Pulse kSlamLength = kResolution4 / 32; // 1/32 measure = 30 pulses
 
 		// Helper function to update GCD with a pulse if it's within the measure
 		auto updateGCD = [&](Pulse pulse) {
@@ -2646,7 +2641,7 @@ kson::ErrorType kson::SaveKshChartData(std::ostream& stream, const ChartData& ch
 
 kson::ErrorType kson::SaveKshChartData(const std::string& filePath, const ChartData& chartData, KshSavingDiag* pKshSavingDiag)
 {
-	std::ofstream ofs(filePath, std::ios_base::binary);
+	std::ofstream ofs(U8Path(filePath), std::ios_base::binary);
 	if (!ofs.good())
 	{
 		return ErrorType::GeneralIOError;

@@ -12,6 +12,12 @@ namespace
 {
 	using namespace kson;
 
+	std::filesystem::path U8Path(const std::string& utf8Str)
+	{
+		return std::filesystem::path(
+			std::u8string_view(reinterpret_cast<const char8_t*>(utf8Str.data()), utf8Str.size()));
+	}
+
 	constexpr char kOptionSeparator = '=';
 	constexpr char kBlockSeparator = '|';
 	constexpr std::string_view kMeasureSeparator = "--";
@@ -532,28 +538,6 @@ namespace
 		}
 	}
 
-	void ApplyBufferedCurvesToGraphSection(
-		const std::string& paramName,
-		ByPulse<GraphSection>& graphSections,
-		const std::unordered_map<std::string, ByPulse<GraphCurveValue>>& bufferedCurves)
-	{
-		if (!bufferedCurves.contains(paramName))
-		{
-			return;
-		}
-
-		for (const auto& [pulse, curve] : bufferedCurves.at(paramName))
-		{
-			for (auto& [sectionPulse, section] : graphSections)
-			{
-				const RelPulse relPulse = pulse - sectionPulse;
-				if (relPulse >= 0 && section.v.contains(relPulse))
-				{
-					section.v.at(relPulse).curve = curve;
-				}
-			}
-		}
-	}
 
 	void ApplyBufferedCurvesToLaser(
 		std::size_t laneIdx,
@@ -1160,7 +1144,7 @@ namespace
 
 				// Publish prepared laser section
 				auto& targetLane = m_pTargetChartData->note.laser[m_targetLaneIdx];
-				const auto [_, inserted] = targetLane.emplace(
+				targetLane.emplace(
 					time,
 					LaserSection{
 						.v = convertedGraphSection,
@@ -1733,14 +1717,32 @@ namespace
 					}
 
 					auto& def = isDefineFX ? chartData.audio.audioEffect.fx.def : chartData.audio.audioEffect.laser.def;
-					def.push_back(
-						AudioEffectDefKVP{
-							.name = name,
-							.v = AudioEffectDef{
-								.type = s_audioEffectTypeTable.at(type),
-								.v = std::move(paramsKson),
-							},
+					auto existingIt = std::find_if(def.begin(), def.end(),
+						[&name](const auto& kvp) { return kvp.name == name; });
+					if (existingIt != def.end())
+					{
+						pKshDiag->warnings.push_back({
+							.type = KshLoadingWarningType::AudioEffectDuplicateName,
+							.scope = WarningScope::EditorOnly,
+							.message = "Duplicate audio effect definition '" + name + "' found. The later definition will be used.",
+							.lineNo = fileLineNo,
 						});
+						existingIt->v = AudioEffectDef{
+							.type = s_audioEffectTypeTable.at(type),
+							.v = std::move(paramsKson),
+						};
+					}
+					else
+					{
+						def.push_back(
+							AudioEffectDefKVP{
+								.name = name,
+								.v = AudioEffectDef{
+									.type = s_audioEffectTypeTable.at(type),
+									.v = std::move(paramsKson),
+								},
+							});
+					}
 				}
 				continue;
 			}
@@ -2509,12 +2511,13 @@ MetaChartData kson::LoadKshMetaChartData(std::istream& stream)
 
 MetaChartData kson::LoadKshMetaChartData(const std::string& filePath)
 {
-	if (!std::filesystem::exists(filePath))
+	const auto fsPath = U8Path(filePath);
+	if (!std::filesystem::exists(fsPath))
 	{
 		return { .error = ErrorType::FileNotFound };
 	}
 
-	std::ifstream ifs(filePath, std::ios_base::binary);
+	std::ifstream ifs(fsPath, std::ios_base::binary);
 	if (!ifs.good())
 	{
 		return { .error = ErrorType::CouldNotOpenInputFileStream };
@@ -2566,12 +2569,13 @@ kson::ChartData kson::LoadKshChartData(std::istream& stream, KshLoadingDiag* pKs
 
 ChartData kson::LoadKshChartData(const std::string& filePath, KshLoadingDiag* pKshDiag)
 {
-	if (!std::filesystem::exists(filePath))
+	const auto fsPath = U8Path(filePath);
+	if (!std::filesystem::exists(fsPath))
 	{
 		return { .error = ErrorType::FileNotFound };
 	}
 
-	std::ifstream ifs(filePath, std::ios_base::binary);
+	std::ifstream ifs(fsPath, std::ios_base::binary);
 	if (!ifs.good())
 	{
 		return { .error = ErrorType::CouldNotOpenInputFileStream };
