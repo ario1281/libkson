@@ -38,9 +38,11 @@ if(NOT WIN32)
     target_link_libraries(kson_test PRIVATE Iconv::Iconv)
 endif()
 
-# Copy assets directory to build directory
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets
-     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+# Copy assets directory to the executable output directory
+add_custom_command(TARGET kson_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/assets
+        $<TARGET_FILE_DIR:kson_test>/assets)
 
 # Enable CTest
 enable_testing()

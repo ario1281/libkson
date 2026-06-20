@@ -8,7 +8,6 @@ TEST_CASE("Basic Chart Data", "[chart]") {
 		kson::ChartData chart;
 
 		REQUIRE(chart.error == kson::ErrorType::None);
-		REQUIRE(chart.warnings.empty());
 		REQUIRE(chart.meta.title.empty());
 		REQUIRE(chart.meta.titleTranslit.empty());
 		REQUIRE(chart.meta.artist.empty());
@@ -141,13 +140,21 @@ TEST_CASE("Timing Utilities", "[timing]") {
 		// 150: 480 + 840 = 1320, 180: 960, 200: 720
 		REQUIRE(kson::GetModeBPM(beat, 3000) == Approx(150.0));
 
-		// Decimal values round to same integer
+		// Decimal values are distinguished up to 3 decimal places
 		beat.bpm.clear();
 		beat.bpm.emplace(0, 150.2);
 		beat.bpm.emplace(480, 150.7);
 		beat.bpm.emplace(960, 180.0);
-		// Both 150.2 and 150.7 count as 150
-		REQUIRE(kson::GetModeBPM(beat, 1200) == Approx(150.0));
+		// 150.2 and 150.7 each have 480 pulses, higher BPM (150.7) wins
+		REQUIRE(kson::GetModeBPM(beat, 1200) == Approx(150.7));
+
+		// 4th decimal place is ignored (truncated to 3 decimal places)
+		beat.bpm.clear();
+		beat.bpm.emplace(0, 150.1231);
+		beat.bpm.emplace(480, 150.1239);
+		beat.bpm.emplace(960, 120.0);
+		// 150.1231 and 150.1239 both become 150.123: 960 pulses, 120.0: 240 pulses
+		REQUIRE(kson::GetModeBPM(beat, 1200) == Approx(150.123).epsilon(0.0001));
 
 		// BPM changes after lastPulse are ignored
 		beat.bpm.clear();
@@ -239,7 +246,7 @@ TEST_CASE("Graph Utilities", "[graph]") {
 		// Weak ease-out curve, flat end
 		{
 			kson::Graph graph;
-			
+
 			graph.emplace(0, kson::GraphPoint{0.0, {0.5, 1.0}});
 			graph.emplace(480, 1.0);
 
@@ -247,6 +254,44 @@ TEST_CASE("Graph Utilities", "[graph]") {
 			REQUIRE(kson::GraphValueAt(graph, 240) == Approx(0.7500));
 			REQUIRE(kson::GraphValueAt(graph, 360) == Approx(0.9375));
 		}
+	}
+
+	SECTION("Graph value side at a discontinuity") {
+		kson::Graph graph;
+
+		// Slam at pulse 240 (incoming 0.5 -> outgoing 0.8)
+		graph.emplace(0, 0.0);
+		graph.emplace(240, kson::GraphValue{0.5, 0.8});
+		graph.emplace(480, 1.0);
+
+		// On the graph point: After returns vf, Before returns v
+		REQUIRE(kson::GraphValueAt(graph, 240) == Approx(0.8)); // default After
+		REQUIRE(kson::GraphValueAt(graph, 240, kson::GraphSide::After) == Approx(0.8));
+		REQUIRE(kson::GraphValueAt(graph, 240, kson::GraphSide::Before) == Approx(0.5));
+
+		// Off the graph point: side is irrelevant
+		REQUIRE(kson::GraphValueAt(graph, 120, kson::GraphSide::Before) == Approx(0.25));
+		REQUIRE(kson::GraphValueAt(graph, 120, kson::GraphSide::After) == Approx(0.25));
+	}
+
+	SECTION("Graph value at fractional pulse") {
+		kson::Graph graph;
+
+		graph.emplace(0, 0.0);
+		graph.emplace(240, kson::GraphValue{0.5, 0.8});
+		graph.emplace(480, 1.0);
+
+		// Integer pulse respects side on a graph point
+		REQUIRE(kson::GraphValueAtDouble(graph, 240.0) == Approx(0.8));
+		REQUIRE(kson::GraphValueAtDouble(graph, 240.0, kson::GraphSide::Before) == Approx(0.5));
+
+		// Fractional pulse interpolates within the segment (side is irrelevant)
+		REQUIRE(kson::GraphValueAtDouble(graph, 120.5) == Approx(0.5 * 120.5 / 240.0));
+		// Just before the slam approaches the incoming value 0.5
+		REQUIRE(kson::GraphValueAtDouble(graph, 239.5) == Approx(0.5 * 239.5 / 240.0));
+		// Just after the slam starts from the outgoing value 0.8
+		REQUIRE(kson::GraphValueAtDouble(graph, 240.5) == Approx(0.8 + 0.2 * 0.5 / 240.0));
+		REQUIRE(kson::GraphValueAtDouble(graph, 360.5) == Approx(0.8 + 0.2 * 120.5 / 240.0));
 	}
 }
 

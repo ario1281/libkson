@@ -1,4 +1,4 @@
-﻿#include "kson/Error.hpp"
+#include "kson/Error.hpp"
 
 const char *kson::GetErrorString(kson::ErrorType errorType)
 {
@@ -13,10 +13,10 @@ const char *kson::GetErrorString(kson::ErrorType errorType)
 	case kson::ErrorType::CouldNotOpenInputFileStream:
 		return "Could not open input file stream";
 	case kson::ErrorType::CouldNotOpenOutputFileStream:
-		return "Could not open input file stream";
+		return "Could not open output file stream";
 	case kson::ErrorType::GeneralChartFormatError:
 		return "Chart format error";
-	case kson::ErrorType::KSONParseError:
+	case kson::ErrorType::KsonParseError:
 		return "KSON parse error";
 	case kson::ErrorType::EncodingError:
 		return "Encoding error";

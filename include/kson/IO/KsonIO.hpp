@@ -1,21 +1,27 @@
-﻿#pragma once
+#pragma once
 #ifndef KSON_WITHOUT_JSON_DEPENDENCY
 #include "kson/ChartData.hpp"
+#include "kson/IO/KsonLoadingDiag.hpp"
+#include "kson/IO/KsonSavingDiag.hpp"
 
 namespace kson
 {
-	inline constexpr std::int32_t kKSONFormatVersion = 1; // kson format version number (1 for kson 0.9.0)
+	inline constexpr std::int32_t kKsonFormatVersion = 1; // kson format version number (1 for kson 0.9.0)
 
-	MetaChartData LoadKSONMetaChartData(std::istream& stream);
+	ErrorType SaveKsonChartData(std::ostream& stream, const ChartData& chartData);
 
-	MetaChartData LoadKSONMetaChartData(const std::string& filePath);
+	ErrorType SaveKsonChartData(std::ostream& stream, const ChartData& chartData, KsonSavingDiag* pKsonDiag);
 
-	ChartData LoadKSONChartData(std::istream& stream);
+	ErrorType SaveKsonChartData(const std::string& filePath, const ChartData& chartData);
 
-	ChartData LoadKSONChartData(const std::string& filePath);
+	ErrorType SaveKsonChartData(const std::string& filePath, const ChartData& chartData, KsonSavingDiag* pKsonDiag);
 
-	ErrorType SaveKSONChartData(std::ostream& stream, const ChartData& chartData);
+	ChartData LoadKsonChartData(std::istream& stream, KsonLoadingDiag* pKsonDiag = nullptr);
 
-	ErrorType SaveKSONChartData(const std::string& filePath, const ChartData& chartData);
+	ChartData LoadKsonChartData(const std::string& filePath, KsonLoadingDiag* pKsonDiag = nullptr);
+
+	MetaChartData LoadKsonMetaChartData(std::istream& stream, KsonLoadingDiag* pKsonDiag = nullptr);
+
+	MetaChartData LoadKsonMetaChartData(const std::string& filePath, KsonLoadingDiag* pKsonDiag = nullptr);
 }
 #endif

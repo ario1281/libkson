@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "kson/Common/Common.hpp"
 
 namespace kson
@@ -17,8 +17,10 @@ namespace kson
 		std::string filenameP; // "xxx_p.ogg", UTF-8 guaranteed
 		std::string filenameFP; // "xxx_fp.ogg", UTF-8 guaranteed
 
+		[[nodiscard]]
 		bool empty() const;
 
+		[[nodiscard]]
 		std::vector<std::string> toStrArray() const;
 	};
 

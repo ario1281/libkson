@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "kson/Common/Common.hpp"
 
 namespace kson
@@ -22,11 +22,17 @@ namespace kson
 		PeakingFilter,
 	};
 
+	[[nodiscard]]
 	AudioEffectType StrToAudioEffectType(std::string_view str);
 
+	[[nodiscard]]
 	std::string_view AudioEffectTypeToStr(AudioEffectType type);
 
 	using AudioEffectParams = Dict<std::string>;
+
+	// Sort parameter names according to the format specification order
+	[[nodiscard]]
+	std::vector<std::string> SortAudioEffectParamNames(AudioEffectType type, const AudioEffectParams& params);
 
 	struct AudioEffectDef
 	{
@@ -43,11 +49,14 @@ namespace kson
 		Dict<FXLane<AudioEffectParams>> longEvent;
 
 		// Note: This is inefficient, so be careful when using it
+		[[nodiscard]]
 		bool defContains(std::string_view name) const;
 
 		// Note: This is inefficient, so be careful when using it
+		[[nodiscard]]
 		const AudioEffectDef& defByName(std::string_view name) const;
 
+		[[nodiscard]]
 		Dict<AudioEffectDef> defAsDict() const;
 	};
 
@@ -66,12 +75,15 @@ namespace kson
 
 		// Note: If you call this function frequently, it's recommended to first call defAsDict to get the dictionary and use it,
 		//       as this function uses linear search.
+		[[nodiscard]]
 		bool defContains(std::string_view name) const;
 
 		// Note: If you call this function frequently, it's recommended to first call defAsDict to get the dictionary and use it,
 		//       as this function uses linear search.
+		[[nodiscard]]
 		const AudioEffectDef& defByName(std::string_view name) const;
 
+		[[nodiscard]]
 		Dict<AudioEffectDef> defAsDict() const;
 	};
 

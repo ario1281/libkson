@@ -1,15 +1,28 @@
-﻿#pragma once
+#pragma once
 #include <optional>
 #include "kson/Common/Common.hpp"
 #include "kson/Note/NoteInfo.hpp"
 
 namespace kson
 {
-	double GraphValueAt(const Graph& graph, Pulse pulse);
+	enum class GraphSide
+	{
+		Before, // Incoming value (v)
+		After, // Outgoing value (vf)
+	};
 
+	[[nodiscard]]
+	double GraphValueAt(const Graph& graph, Pulse pulse, GraphSide side = GraphSide::After);
+
+	// Same as GraphValueAt, but accepts fractional pulses
+	[[nodiscard]]
+	double GraphValueAtDouble(const Graph& graph, double pulse, GraphSide side = GraphSide::After);
+
+	[[nodiscard]]
 	Graph BakeStopIntoScrollSpeed(const Graph& scrollSpeed, const ByPulse<RelPulse>& stop);
 
 	template <class GS>
+	[[nodiscard]]
 	typename ByPulse<GS>::const_iterator GraphSectionAt(const ByPulse<GS>& graphSections, Pulse pulse)
 #ifdef __cpp_concepts
 		requires std::is_same_v<GS, GraphSection> || std::is_same_v<GS, LaserSection>
@@ -27,6 +40,7 @@ namespace kson
 	}
 
 	template <class GS>
+	[[nodiscard]]
 	std::optional<double> GraphSectionValueAt(const ByPulse<GS>& graphSections, Pulse pulse)
 #ifdef __cpp_concepts
 		requires std::is_same_v<GS, GraphSection> || std::is_same_v<GS, LaserSection>
@@ -71,6 +85,7 @@ namespace kson
 	}
 
 	template <class GS>
+	[[nodiscard]]
 	double GraphSectionValueAtWithDefault(const ByPulse<GS>& graphSections, Pulse pulse, double defaultValue)
 #ifdef __cpp_concepts
 		requires std::is_same_v<GS, GraphSection> || std::is_same_v<GS, LaserSection>
@@ -88,6 +103,7 @@ namespace kson
 	}
 
 	template <class GS>
+	[[nodiscard]]
 	std::optional<GraphPoint> GraphPointAt(const ByPulse<GS>& graphSections, Pulse pulse)
 	{
 		if (graphSections.empty())

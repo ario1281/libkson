@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 namespace kson
 {
@@ -12,12 +12,13 @@ namespace kson
 		CouldNotOpenOutputFileStream = 10003,
 
 		GeneralChartFormatError = 20000,
-		KSONParseError = 20001,
+		KsonParseError = 20001,
 
 		EncodingError = 30000,
 
 		UnknownError = 90000,
 	};
 
+	[[nodiscard]]
 	const char *GetErrorString(ErrorType errorType);
 }

@@ -1,4 +1,4 @@
-﻿#include "kson/Util/GraphCurve.hpp"
+#include "kson/Util/GraphCurve.hpp"
 #include "kson/Note/NoteInfo.hpp"
 #include <cmath>
 #include <algorithm>
@@ -227,6 +227,12 @@ namespace kson
 			result.v.insert(*nextItr);
 
 			++itr;
+		}
+
+		// Clear curve data from all points (already expanded to linear segments)
+		for (auto& [ry, point] : result.v)
+		{
+			point.curve = GraphCurveValue{};
 		}
 
 		return result;

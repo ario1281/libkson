@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <algorithm>
 #include <string>
 #include <string_view>
@@ -66,6 +66,9 @@ namespace kson
 		T v;
 	};
 
+	[[nodiscard]]
+	bool AlmostEquals(double a, double b);
+
 	struct GraphValue
 	{
 		double v = 0.0;
@@ -100,9 +103,10 @@ namespace kson
 		}
 
 		// Returns true if this represents a linear interpolation (no curve)
+		[[nodiscard]]
 		bool isLinear() const
 		{
-			return a == b;
+			return AlmostEquals(a, b);
 		}
 	};
 
@@ -160,6 +164,7 @@ namespace kson
 	}
 
 	template <typename T, typename U>
+	[[nodiscard]]
 	U ValueAtOrDefault(const std::map<T, U>& map, T key, const U& defaultValue)
 	{
 		const auto itr = ValueItrAt(map, key);
@@ -171,6 +176,7 @@ namespace kson
 	}
 
 	template <typename T>
+	[[nodiscard]]
 	std::size_t CountInRange(const ByPulse<T>& map, Pulse start, Pulse end)
 	{
 		static_assert(std::is_signed_v<Pulse>);
@@ -186,6 +192,7 @@ namespace kson
 	}
 
 	template <typename T>
+	[[nodiscard]]
 	auto FirstInRange(const ByPulse<T>& map, Pulse start, Pulse end)
 	{
 		static_assert(std::is_signed_v<Pulse>);
@@ -199,6 +206,19 @@ namespace kson
 		return itr;
 	}
 
+	template <typename T>
+	[[nodiscard]]
+	auto IntervalAt(const ByPulse<T>& map, Pulse pulse)
+	{
+		const auto itr = ValueItrAt(map, pulse);
+		if (itr != map.end() && itr->first <= pulse && pulse < itr->first + itr->second.length)
+		{
+			return itr;
+		}
+		return map.end();
+	}
+
+	[[nodiscard]]
 	inline double RemoveFloatingPointError(double value)
 	{
 		// Round the value to eight decimal places (e.g. "0.700000004" -> "0.7")
@@ -216,6 +236,7 @@ namespace kson
 		}
 	}
 
+	[[nodiscard]]
 	inline bool AlmostEquals(double a, double b)
 	{
 		return std::round(a * 1e8) == std::round(b * 1e8);

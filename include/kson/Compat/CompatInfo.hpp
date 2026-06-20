@@ -1,20 +1,23 @@
-﻿#pragma once
+#pragma once
 #include "kson/Common/Common.hpp"
 
 namespace kson
 {
-	struct KSHUnknownInfo
+	struct KshUnknownInfo
 	{
 		std::unordered_map<std::string, std::string> meta;
 		std::unordered_map<std::string, ByPulseMulti<std::string>> option;
 		ByPulseMulti<std::string> line;
+
+		bool operator==(const KshUnknownInfo&) const = default;
 	};
 
 	struct CompatInfo
 	{
 		std::string kshVersion;
-		KSHUnknownInfo kshUnknown;
+		KshUnknownInfo kshUnknown;
 
-		bool isKSHVersionOlderThan(int kshVersionInt) const;
+		[[nodiscard]]
+		bool isKshVersionOlderThan(int kshVersionInt) const;
 	};
 }

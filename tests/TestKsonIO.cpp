@@ -45,11 +45,9 @@ TEST_CASE("KSON Loading", "[kson_io]") {
         })";
         
         std::istringstream stream(ksonData);
-        auto chart = kson::LoadKSONChartData(stream);
+        auto chart = kson::LoadKsonChartData(stream);
         
         REQUIRE(chart.error == kson::ErrorType::None);
-        REQUIRE(chart.warnings.empty());
-        
         // Check metadata
         REQUIRE(chart.meta.title == "Test Song");
         REQUIRE(chart.meta.artist == "Test Artist");
@@ -88,11 +86,9 @@ TEST_CASE("KSON Loading", "[kson_io]") {
         })";
         
         std::istringstream stream(ksonData);
-        auto chart = kson::LoadKSONChartData(stream);
+        auto chart = kson::LoadKsonChartData(stream);
         
         REQUIRE(chart.error == kson::ErrorType::None);
-        REQUIRE(chart.warnings.empty());
-        
         // Check defaults
         REQUIRE(chart.meta.title.empty());
         REQUIRE(chart.meta.level == 1);
@@ -109,7 +105,7 @@ TEST_CASE("KSON Loading", "[kson_io]") {
         })";
         
         std::istringstream stream(ksonData);
-        auto chart = kson::LoadKSONChartData(stream);
+        auto chart = kson::LoadKsonChartData(stream);
         
         REQUIRE(chart.error == kson::ErrorType::None);
         REQUIRE(chart.meta.difficulty.name == "Maximum");
@@ -124,7 +120,7 @@ TEST_CASE("KSON Loading", "[kson_io]") {
         })";
         
         std::istringstream stream(ksonData);
-        auto chart = kson::LoadKSONChartData(stream);
+        auto chart = kson::LoadKsonChartData(stream);
         
         REQUIRE(chart.error == kson::ErrorType::None);
         REQUIRE(chart.meta.difficulty.idx == 3);
@@ -138,12 +134,13 @@ TEST_CASE("KSON Loading", "[kson_io]") {
         })";
         
         std::istringstream stream(ksonData);
-        auto chart = kson::LoadKSONChartData(stream);
-        
-        REQUIRE(chart.error == kson::ErrorType::KSONParseError);
-        REQUIRE(!chart.warnings.empty());
+        kson::KsonLoadingDiag ksonDiag;
+        auto chart = kson::LoadKsonChartData(stream, &ksonDiag);
+
+        REQUIRE(chart.error == kson::ErrorType::KsonParseError);
+        REQUIRE(!ksonDiag.warnings.empty());
     }
-    
+
     SECTION("Type error in JSON") {
         std::string ksonData = R"({
             "format_version": 1,
@@ -151,12 +148,13 @@ TEST_CASE("KSON Loading", "[kson_io]") {
                 "level": "not a number"
             }
         })";
-        
+
         std::istringstream stream(ksonData);
-        auto chart = kson::LoadKSONChartData(stream);
-        
-        REQUIRE(chart.error == kson::ErrorType::KSONParseError);
-        REQUIRE(!chart.warnings.empty());
+        kson::KsonLoadingDiag ksonDiag;
+        auto chart = kson::LoadKsonChartData(stream, &ksonDiag);
+
+        REQUIRE(chart.error == kson::ErrorType::KsonParseError);
+        REQUIRE(!ksonDiag.warnings.empty());
     }
     
     SECTION("Load from file path") {
@@ -172,7 +170,7 @@ TEST_CASE("KSON Loading", "[kson_io]") {
             })";
         }
         
-        auto chart = kson::LoadKSONChartData(testFile);
+        auto chart = kson::LoadKsonChartData(testFile);
         REQUIRE(chart.error == kson::ErrorType::None);
         REQUIRE(chart.meta.title == "File Test");
         
@@ -181,8 +179,8 @@ TEST_CASE("KSON Loading", "[kson_io]") {
     }
     
     SECTION("Non-existent file") {
-        auto chart = kson::LoadKSONChartData("non_existent_file.kson");
-        REQUIRE(chart.error == kson::ErrorType::CouldNotOpenInputFileStream);
+        auto chart = kson::LoadKsonChartData("non_existent_file.kson");
+        REQUIRE(chart.error == kson::ErrorType::FileNotFound);
     }
 }
 
@@ -213,7 +211,7 @@ TEST_CASE("KSON Round-trip", "[kson_io]") {
         
         // Save to string
         std::ostringstream oss;
-        auto saveResult = kson::SaveKSONChartData(oss, original);
+        auto saveResult = kson::SaveKsonChartData(oss, original);
         REQUIRE(saveResult == kson::ErrorType::None);
         
         std::string ksonString = oss.str();
@@ -221,11 +219,9 @@ TEST_CASE("KSON Round-trip", "[kson_io]") {
         
         // Load back
         std::istringstream iss(ksonString);
-        auto loaded = kson::LoadKSONChartData(iss);
+        auto loaded = kson::LoadKsonChartData(iss);
         
         REQUIRE(loaded.error == kson::ErrorType::None);
-        REQUIRE(loaded.warnings.empty());
-        
         // Compare metadata
         REQUIRE(loaded.meta.title == original.meta.title);
         REQUIRE(loaded.meta.artist == original.meta.artist);
@@ -317,7 +313,7 @@ TEST_CASE("KSON Audio Effect Loading", "[kson_io][audio_effect]") {
         })";
         
         std::istringstream stream(ksonData);
-        auto chart = kson::LoadKSONChartData(stream);
+        auto chart = kson::LoadKsonChartData(stream);
         
         REQUIRE(chart.error == kson::ErrorType::None);
         
@@ -408,7 +404,7 @@ TEST_CASE("KSON Audio Effect Loading", "[kson_io][audio_effect]") {
         })";
         
         std::istringstream stream(ksonData);
-        auto chart = kson::LoadKSONChartData(stream);
+        auto chart = kson::LoadKsonChartData(stream);
         
         REQUIRE(chart.error == kson::ErrorType::None);
         
@@ -467,7 +463,7 @@ TEST_CASE("KSON Audio Effect Loading", "[kson_io][audio_effect]") {
         })";
         
         std::istringstream stream(ksonData);
-        auto chart = kson::LoadKSONChartData(stream);
+        auto chart = kson::LoadKsonChartData(stream);
         
         REQUIRE(chart.error == kson::ErrorType::None);
         
@@ -532,7 +528,7 @@ TEST_CASE("KSON Audio Effect Loading", "[kson_io][audio_effect]") {
         })";
         
         std::istringstream stream(ksonData);
-        auto chart = kson::LoadKSONChartData(stream);
+        auto chart = kson::LoadKsonChartData(stream);
         REQUIRE(chart.error == kson::ErrorType::None);
         
         // Check that parameter values are stored as strings
@@ -562,7 +558,7 @@ TEST_CASE("KSON BeatInfo scroll_speed", "[kson_io][beat]") {
         })";
         
         std::istringstream stream(ksonData);
-        kson::ChartData chart = kson::LoadKSONChartData(stream);
+        kson::ChartData chart = kson::LoadKsonChartData(stream);
         
         REQUIRE(chart.error == kson::ErrorType::None);
         REQUIRE(chart.beat.scrollSpeed.size() == 1);
@@ -585,7 +581,7 @@ TEST_CASE("KSON BeatInfo scroll_speed", "[kson_io][beat]") {
         })";
         
         std::istringstream stream(ksonData);
-        kson::ChartData chart = kson::LoadKSONChartData(stream);
+        kson::ChartData chart = kson::LoadKsonChartData(stream);
         
         REQUIRE(chart.error == kson::ErrorType::None);
         REQUIRE(chart.beat.scrollSpeed.size() == 3);
@@ -612,7 +608,7 @@ TEST_CASE("KSON BeatInfo scroll_speed", "[kson_io][beat]") {
         })";
         
         std::istringstream stream(ksonData);
-        kson::ChartData chart = kson::LoadKSONChartData(stream);
+        kson::ChartData chart = kson::LoadKsonChartData(stream);
         
         REQUIRE(chart.error == kson::ErrorType::None);
         REQUIRE(chart.beat.scrollSpeed.size() == 4);
@@ -644,10 +640,14 @@ TEST_CASE("KSON BeatInfo scroll_speed", "[kson_io][beat]") {
         })";
         
         std::istringstream stream(ksonData);
-        kson::ChartData chart = kson::LoadKSONChartData(stream);
+        kson::ChartData chart = kson::LoadKsonChartData(stream);
         
         REQUIRE(chart.error == kson::ErrorType::None);
-        REQUIRE(chart.beat.scrollSpeed.empty());
+        // Default scroll_speed=1.0 is added at pulse 0
+        REQUIRE(chart.beat.scrollSpeed.size() == 1);
+        REQUIRE(chart.beat.scrollSpeed.contains(0));
+        REQUIRE(chart.beat.scrollSpeed.at(0).v.v == Approx(1.0));
+        REQUIRE(chart.beat.scrollSpeed.at(0).v.vf == Approx(1.0));
     }
     
     SECTION("scroll_speed with gaps (sparse points)") {
@@ -664,7 +664,7 @@ TEST_CASE("KSON BeatInfo scroll_speed", "[kson_io][beat]") {
         })";
         
         std::istringstream stream(ksonData);
-        kson::ChartData chart = kson::LoadKSONChartData(stream);
+        kson::ChartData chart = kson::LoadKsonChartData(stream);
         
         REQUIRE(chart.error == kson::ErrorType::None);
         REQUIRE(chart.beat.scrollSpeed.size() == 3);
@@ -696,7 +696,7 @@ TEST_CASE("KSON BeatInfo stop", "[kson_io][beat]") {
 		})";
 
 		std::istringstream stream(ksonData);
-		kson::ChartData chart = kson::LoadKSONChartData(stream);
+		kson::ChartData chart = kson::LoadKsonChartData(stream);
 
 		REQUIRE(chart.error == kson::ErrorType::None);
 		REQUIRE(chart.beat.stop.empty());
@@ -715,7 +715,7 @@ TEST_CASE("KSON BeatInfo stop", "[kson_io][beat]") {
 		})";
 
 		std::istringstream stream(ksonData);
-		kson::ChartData chart = kson::LoadKSONChartData(stream);
+		kson::ChartData chart = kson::LoadKsonChartData(stream);
 
 		REQUIRE(chart.error == kson::ErrorType::None);
 		REQUIRE(chart.beat.stop.size() == 2);
@@ -733,7 +733,7 @@ TEST_CASE("KSON BeatInfo stop", "[kson_io][beat]") {
 		})";
 
 		std::istringstream stream(ksonData);
-		kson::ChartData chart = kson::LoadKSONChartData(stream);
+		kson::ChartData chart = kson::LoadKsonChartData(stream);
 
 		REQUIRE(chart.error == kson::ErrorType::None);
 		REQUIRE(chart.beat.stop.empty());
@@ -747,7 +747,7 @@ TEST_CASE("KSON BeatInfo stop", "[kson_io][beat]") {
 		chart.beat.stop[2400] = 240;
 
 		std::ostringstream stream;
-		kson::SaveKSONChartData(stream, chart);
+		kson::SaveKsonChartData(stream, chart);
 
 		std::string result = stream.str();
 		REQUIRE(result.find("\"stop\"") != std::string::npos);
@@ -773,11 +773,12 @@ TEST_CASE("KSON format_version validation", "[kson_io]") {
 		})";
 
 		std::istringstream iss(ksonData);
-		kson::ChartData chart = kson::LoadKSONChartData(iss);
+		kson::KsonLoadingDiag ksonDiag;
+		kson::ChartData chart = kson::LoadKsonChartData(iss, &ksonDiag);
 
-		REQUIRE(chart.error == kson::ErrorType::KSONParseError);
-		REQUIRE(chart.warnings.size() > 0);
-		REQUIRE(chart.warnings[0] == "Missing required field: format_version");
+		REQUIRE(chart.error == kson::ErrorType::KsonParseError);
+		REQUIRE(ksonDiag.warnings.size() > 0);
+		REQUIRE(ksonDiag.warnings[0].type == kson::KsonLoadingWarningType::MissingFormatVersion);
 	}
 
 	SECTION("Invalid format_version type (string)") {
@@ -796,11 +797,12 @@ TEST_CASE("KSON format_version validation", "[kson_io]") {
 		})";
 
 		std::istringstream iss(ksonData);
-		kson::ChartData chart = kson::LoadKSONChartData(iss);
+		kson::KsonLoadingDiag ksonDiag;
+		kson::ChartData chart = kson::LoadKsonChartData(iss, &ksonDiag);
 
-		REQUIRE(chart.error == kson::ErrorType::KSONParseError);
-		REQUIRE(chart.warnings.size() > 0);
-		REQUIRE(chart.warnings[0] == "Invalid format_version: must be an integer");
+		REQUIRE(chart.error == kson::ErrorType::KsonParseError);
+		REQUIRE(ksonDiag.warnings.size() > 0);
+		REQUIRE(ksonDiag.warnings[0].type == kson::KsonLoadingWarningType::InvalidFormatVersion);
 	}
 
 	SECTION("Valid format_version") {
@@ -819,7 +821,7 @@ TEST_CASE("KSON format_version validation", "[kson_io]") {
 		})";
 
 		std::istringstream iss(ksonData);
-		kson::ChartData chart = kson::LoadKSONChartData(iss);
+		kson::ChartData chart = kson::LoadKsonChartData(iss);
 
 		REQUIRE(chart.error == kson::ErrorType::None);
 	}
@@ -858,7 +860,7 @@ TEST_CASE("KSON Tilt Serialization", "[kson_io][tilt]") {
 
 		// Save to KSON
 		std::ostringstream oss;
-		kson::ErrorType result = kson::SaveKSONChartData(oss, chart);
+		kson::ErrorType result = kson::SaveKsonChartData(oss, chart);
 		REQUIRE(result == kson::ErrorType::None);
 
 		std::string ksonOutput = oss.str();
@@ -921,7 +923,7 @@ TEST_CASE("KSON Tilt Serialization", "[kson_io][tilt]") {
 
 		// Load back
 		std::istringstream iss(ksonOutput);
-		kson::ChartData loaded = kson::LoadKSONChartData(iss);
+		kson::ChartData loaded = kson::LoadKsonChartData(iss);
 		REQUIRE(loaded.error == kson::ErrorType::None);
 
 		// Compare tilt data
@@ -965,4 +967,40 @@ TEST_CASE("KSON Tilt Serialization", "[kson_io][tilt]") {
 		REQUIRE(point2880.curve.a == Approx(0.3));
 		REQUIRE(point2880.curve.b == Approx(0.7));
 	}
+}
+
+
+TEST_CASE("KSON saving warning for overlapping laser sections", "[kson_io][saving_diag]")
+{
+	kson::ChartData chart;
+	chart.note.laser[0][0].v.emplace(0, kson::GraphPoint{ kson::GraphValue{ 0.0 } });
+	chart.note.laser[0][0].v.emplace(960, kson::GraphPoint{ kson::GraphValue{ 0.5 } });
+	chart.note.laser[0][480].v.emplace(0, kson::GraphPoint{ kson::GraphValue{ 0.25 } });
+	chart.note.laser[0][480].v.emplace(960, kson::GraphPoint{ kson::GraphValue{ 0.75 } });
+
+	kson::KsonSavingDiag diag;
+	std::ostringstream oss;
+	const kson::ErrorType result = kson::SaveKsonChartData(oss, chart, &diag);
+
+	REQUIRE(result == kson::ErrorType::None);
+	REQUIRE(diag.warnings.size() == 1);
+	REQUIRE(diag.warnings[0].type == kson::KsonSavingWarningType::OverlappingLaserSections);
+	REQUIRE(!diag.editorWarnings().empty());
+	REQUIRE(diag.playerWarnings().empty());
+}
+
+TEST_CASE("KSON saving warning ignores connected laser sections", "[kson_io][saving_diag]")
+{
+	kson::ChartData chart;
+	chart.note.laser[0][0].v.emplace(0, kson::GraphPoint{ kson::GraphValue{ 0.0 } });
+	chart.note.laser[0][0].v.emplace(960, kson::GraphPoint{ kson::GraphValue{ 0.5 } });
+	chart.note.laser[0][960].v.emplace(0, kson::GraphPoint{ kson::GraphValue{ 0.5 } });
+	chart.note.laser[0][960].v.emplace(960, kson::GraphPoint{ kson::GraphValue{ 1.0 } });
+
+	kson::KsonSavingDiag diag;
+	std::ostringstream oss;
+	const kson::ErrorType result = kson::SaveKsonChartData(oss, chart, &diag);
+
+	REQUIRE(result == kson::ErrorType::None);
+	REQUIRE(diag.warnings.empty());
 }

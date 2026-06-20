@@ -5,7 +5,7 @@ K-Shoot MANIA chart file (.ksh/.kson) parser library written in C++20
 - [x] KSH file loading (compatible with `171`)
 - [x] KSH file saving
 - [x] KSON file loading
-- [x] KSON file saving (compatible with `0.9.0`)
+- [x] KSON file saving (compatible with `1.0.0`)
 
 ## KSH/KSON file format specification
 See this repository: https://github.com/kshootmania/ksm-chart-format
@@ -14,10 +14,10 @@ See this repository: https://github.com/kshootmania/ksm-chart-format
 ### Library
 ```cpp
 // Load KSH chart file
-kson::ChartData chartData = kson::LoadKSHChartData("chart.ksh");
+kson::ChartData chartData = kson::LoadKshChartData("chart.ksh");
 
 // Save KSON chart file
-kson::SaveKSHChartData("chart.kson", chartData);
+kson::SaveKshChartData("chart.kson", chartData);
 
 // Access to chart meta data
 const std::string& title = chartData.meta.title;
@@ -70,7 +70,7 @@ $ cmake --build build
 
 ## Contributors
 
-@m4saka, @123jimin
+@m4saka, @123jimin, @mikomikotaishi
 
 ## License
 MIT License

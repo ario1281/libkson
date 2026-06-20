@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "kson/Common/Common.hpp"
 
 namespace kson
@@ -9,6 +9,6 @@ namespace kson
 
 		std::string appVersion;
 
-		ByPulse<std::string> comment;
+		ByPulseMulti<std::string> comment;
 	};
 }
