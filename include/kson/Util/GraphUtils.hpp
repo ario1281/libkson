@@ -5,8 +5,18 @@
 
 namespace kson
 {
+	enum class GraphSide
+	{
+		Before, // Incoming value (v)
+		After, // Outgoing value (vf)
+	};
+
 	[[nodiscard]]
-	double GraphValueAt(const Graph& graph, Pulse pulse);
+	double GraphValueAt(const Graph& graph, Pulse pulse, GraphSide side = GraphSide::After);
+
+	// Same as GraphValueAt, but accepts fractional pulses
+	[[nodiscard]]
+	double GraphValueAtDouble(const Graph& graph, double pulse, GraphSide side = GraphSide::After);
 
 	[[nodiscard]]
 	Graph BakeStopIntoScrollSpeed(const Graph& scrollSpeed, const ByPulse<RelPulse>& stop);

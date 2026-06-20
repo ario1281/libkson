@@ -630,24 +630,36 @@ namespace
 
 	struct LongNoteData
 	{
-		RelPulse length = 0;
+		// Accumulate fractional pulse lengths
+		double accumulatedLength = 0.0;
 
-		void extendLength(RelPulse relPulse)
+		void extendLength(double relPulse)
 		{
-			length += relPulse;
+			accumulatedLength += relPulse;
+		}
+
+		RelPulse length() const
+		{
+			return static_cast<RelPulse>(accumulatedLength);
 		}
 	};
 
 	struct LongFXNoteData
 	{
-		RelPulse length = 0;
+		// Accumulate fractional pulse lengths
+		double accumulatedLength = 0.0;
 		std::optional<std::string> audioEffectStr;
 		std::optional<std::string> audioEffectParamStr;
 		bool isLegacyChar = false;
 
-		void extendLength(RelPulse relPulse)
+		void extendLength(double relPulse)
 		{
-			length += relPulse;
+			accumulatedLength += relPulse;
+		}
+
+		RelPulse length() const
+		{
+			return static_cast<RelPulse>(accumulatedLength);
 		}
 	};
 
@@ -712,7 +724,7 @@ namespace
 			return m_inserter.prepared();
 		}
 
-		void extendLength(RelPulse relPulse)
+		void extendLength(double relPulse)
 		{
 			m_inserter.data().extendLength(relPulse);
 		}
@@ -722,7 +734,7 @@ namespace
 			if (auto result = m_inserter.publish())
 			{
 				const auto& [time, data] = *result;
-				m_pTargetChartData->note.bt[m_targetLaneIdx].emplace(time, Interval{ .length = data.length });
+				m_pTargetChartData->note.bt[m_targetLaneIdx].emplace(time, Interval{ .length = data.length() });
 			}
 		}
 
@@ -809,7 +821,7 @@ namespace
 			return {};
 		}
 
-		void extendLength(RelPulse relPulse)
+		void extendLength(double relPulse)
 		{
 			m_inserter.data().extendLength(relPulse);
 		}
@@ -819,7 +831,7 @@ namespace
 			if (auto result = m_inserter.publish())
 			{
 				const auto& [time, data] = *result;
-				m_pTargetChartData->note.fx[m_targetLaneIdx].emplace(time, Interval{ .length = data.length });
+				m_pTargetChartData->note.fx[m_targetLaneIdx].emplace(time, Interval{ .length = data.length() });
 			}
 		}
 
@@ -1793,7 +1805,11 @@ namespace
 				if (bufLineCount > 0)
 				{
 					const RelPulse measurePulse = kResolution4 * currentTimeSig.n / currentTimeSig.d;
-					const RelPulse oneLinePulse = measurePulse / bufLineCount;
+					const double oneLinePulse = static_cast<double>(measurePulse) / static_cast<double>(bufLineCount);
+					const auto lineRelPulse = [oneLinePulse](std::size_t lineIdx) -> Pulse
+					{
+						return static_cast<Pulse>(lineIdx * oneLinePulse);
+					};
 
 					// Warn if the measure split is not evenly divisible
 					if (pKshDiag && measurePulse % bufLineCount != 0)
@@ -1809,7 +1825,7 @@ namespace
 					// Add options that require their position
 					for (const auto& [lineIdx, key, value] : optionLines)
 					{
-						const Pulse time = currentPulse + lineIdx * oneLinePulse;
+						const Pulse time = currentPulse + lineRelPulse(lineIdx);
 
 						// Check for _curve suffix
 						if (key.ends_with("_curve"))
@@ -2031,7 +2047,7 @@ namespace
 						std::size_t currentBlock = 0;
 						std::size_t laneIdx = 0;
 
-						const Pulse time = currentPulse + i * oneLinePulse;
+						const Pulse time = currentPulse + lineRelPulse(i);
 
 						for (std::size_t j = 0; j < buf.size(); ++j)
 						{
@@ -2200,14 +2216,14 @@ namespace
 					// Add comments
 					for (const auto& [lineIdx, value] : commentLines)
 					{
-						const Pulse time = currentPulse + lineIdx * oneLinePulse;
+						const Pulse time = currentPulse + lineRelPulse(lineIdx);
 						chartData.editor.comment.emplace(time, value);
 					}
 
 					// Add unknown lines
 					for (const auto& [lineIdx, value] : unknownLines)
 					{
-						const Pulse time = currentPulse + lineIdx * oneLinePulse;
+						const Pulse time = currentPulse + lineRelPulse(lineIdx);
 						chartData.compat.kshUnknown.line.emplace(time, value);
 					}
 				}

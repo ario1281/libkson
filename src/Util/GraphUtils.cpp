@@ -1,13 +1,24 @@
 #include "kson/Util/GraphUtils.hpp"
 #include "kson/Util/GraphCurve.hpp"
 #include <algorithm>
+#include <cmath>
 #include <vector>
 
-double kson::GraphValueAt(const Graph& graph, Pulse pulse)
+double kson::GraphValueAt(const Graph& graph, Pulse pulse, GraphSide side)
 {
 	if (graph.empty())
 	{
 		return 0.0;
+	}
+
+	if (side == GraphSide::Before)
+	{
+		// For the Before side, return the incoming value (v) when pulse is exactly on a graph point
+		const auto exactItr = graph.find(pulse);
+		if (exactItr != graph.end())
+		{
+			return exactItr->second.v.v;
+		}
 	}
 
 	auto itr = graph.upper_bound(pulse);
@@ -42,6 +53,60 @@ double kson::GraphValueAt(const Graph& graph, Pulse pulse)
 	}
 
 	const double lerpRate = static_cast<double>(pulse - pulse1) / static_cast<double>(segmentLength);
+
+	// Apply curve if present
+	const double curveValue = EvaluateCurve(point1.curve, lerpRate);
+
+	return std::lerp(point1.v.vf, point2.v.v, curveValue);
+}
+
+double kson::GraphValueAtDouble(const Graph& graph, double pulse, GraphSide side)
+{
+	if (graph.empty())
+	{
+		return 0.0;
+	}
+
+	const Pulse pulseFloor = static_cast<Pulse>(std::floor(pulse));
+
+	if (static_cast<double>(pulseFloor) == pulse)
+	{
+		// Preserve integer-pulse side semantics
+		return GraphValueAt(graph, pulseFloor, side);
+	}
+
+	auto itr = graph.upper_bound(pulseFloor);
+	if (itr == graph.end())
+	{
+		return graph.rbegin()->second.v.vf;
+	}
+	if (itr != graph.begin())
+	{
+		--itr;
+	}
+
+	const auto& [pulse1, point1] = *itr;
+	if (pulse < static_cast<double>(pulse1))
+	{
+		return point1.v.v;
+	}
+
+	const auto nextItr = std::next(itr);
+	if (nextItr == graph.end())
+	{
+		return point1.v.vf;
+	}
+
+	const auto& [pulse2, point2] = *nextItr;
+	assert(static_cast<double>(pulse1) <= pulse && pulse < static_cast<double>(pulse2));
+
+	const double segmentLength = static_cast<double>(pulse2 - pulse1);
+	if (segmentLength <= 0.0)
+	{
+		return point2.v.v;
+	}
+
+	const double lerpRate = (pulse - static_cast<double>(pulse1)) / segmentLength;
 
 	// Apply curve if present
 	const double curveValue = EvaluateCurve(point1.curve, lerpRate);
